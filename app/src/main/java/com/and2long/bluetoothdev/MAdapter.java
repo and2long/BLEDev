@@ -10,12 +10,13 @@ import java.util.List;
 
 /**
  * Created by and2long on 2018/3/1.
+ * 设备列表适配器
  */
 
 public class MAdapter extends CommonAdapter<BluetoothDevice> {
 
     public MAdapter(Context context, List<BluetoothDevice> datas) {
-        super(context, R.layout.item_blt, datas);
+        super(context, R.layout.item_ble, datas);
     }
 
     @Override
