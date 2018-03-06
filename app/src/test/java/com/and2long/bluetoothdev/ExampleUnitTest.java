@@ -5,7 +5,6 @@ import android.util.Log;
 import org.junit.Test;
 
 import java.util.Calendar;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -71,10 +70,4 @@ public class ExampleUnitTest {
 
     }
 
-    @Test
-    public void UUID() throws Exception {
-        UUID uuid = UUID.randomUUID();
-        System.out.println(uuid);
-
-    }
 }
