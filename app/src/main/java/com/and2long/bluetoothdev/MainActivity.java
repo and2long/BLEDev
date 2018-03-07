@@ -54,8 +54,9 @@ public class MainActivity extends AppCompatActivity {
         public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
 
             if (!mData.contains(device)) {
+                String name = device.getName();
+                String e = DateUtil.getCurrentDateFormat() + "\n" + name + " : " + device.getAddress();
                 mData.add(device);
-                String e = DateUtil.getCurrentDateFormat() + "\n" + device.getName() + " : " + device.getAddress();
                 log(e);
             }
             adapter.notifyDataSetChanged();
@@ -64,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
     };
     private BluetoothGattCharacteristic characteristicRead;
     private BluetoothGattCharacteristic characteristicWrite;
-    private UUID UUID_SERVER = UUID.fromString("8b624661-89ea-4ec9-97cc-eda0b52e96e6");
-    private UUID UUID_CHARREAD = UUID.fromString("8b624662-89ea-4ec9-97cc-eda0b52e96e6");
+    //    private UUID UUID_SERVER = UUID.fromString("8b624661-89ea-4ec9-97cc-eda0b52e96e6");
+//    private UUID UUID_CHARREAD = UUID.fromString("8b624662-89ea-4ec9-97cc-eda0b52e96e6");
     private List<String> mLogData = new ArrayList<>();
     private LogAdapter logAdapter;
     private RecyclerView logList;
@@ -114,10 +115,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
                 stopScan();
-                String e = DateUtil.getCurrentDateFormat() + "\n" + "尝试连接：" + mData.get(position).getName();
+                String e = DateUtil.getCurrentDateFormat() + "\n" + "尝试连接：" + mData.get(position).getName()
+                        + "\n" + "*****稍等一会，等日志刷新后再次操作*****"
+                        + "\n" + "####如果日志出现“error status：133”，再次点击设备尝试再次连接！####";
                 log(e);
                 //第二个参数为false时，尝试连接一次。
-                mBluetoothGatt = mData.get(position).connectGatt(MainActivity.this, false, mBluetoothGattCallback);
+                mBluetoothGatt = mData.get(position).connectGatt(
+                        MainActivity.this, false, mBluetoothGattCallback);
             }
 
             @Override
@@ -165,7 +169,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_LOCATION) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -180,7 +185,9 @@ public class MainActivity extends AppCompatActivity {
                                     public void onClick(DialogInterface dialog, int which) {
                                         //申请定位权限
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_CODE_LOCATION);
+                                            requestPermissions(
+                                                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                                                    REQUEST_CODE_LOCATION);
                                         }
                                     }
                                 }).show();
@@ -215,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
             // 定义一个回调接口供扫描结束处理
             mBluetoothAdapter.startLeScan(callback);
-            String e = DateUtil.getCurrentDateFormat() + "\n" + "start scanning...";
+            String e = DateUtil.getCurrentDateFormat() + "\n" + "开始扫描...";
             log(e);
         } else {
             mScanning = false;
@@ -240,14 +247,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
+            log(DateUtil.getCurrentDateFormat() + "\n" + "onConnectionStateChange() called with: " +
+                    "gatt = [" + gatt + "], status = [" + status + "], newState = [" + newState + "]");
+
             if (status != BluetoothGatt.GATT_SUCCESS) {
                 String err = "Cannot connect device with error status: " + status;
-                String e = DateUtil.getCurrentDateFormat() + "\n" + err;
-                log(e);
+                log(err);
                 // 当尝试连接失败的时候调用 disconnect 方法是不会引起这个方法回调的，所以这里
                 //   直接回调就可以了。
                 gatt.close();
-                Log.i(TAG, err);
                 return;
             }
 
@@ -255,21 +263,23 @@ public class MainActivity extends AppCompatActivity {
                 boolean b = mBluetoothGatt.discoverServices();
                 int size = gatt.getServices().size();
 //                setState(ConnectionState.STATE_CONNECTING);
-                String e = DateUtil.getCurrentDateFormat() + "\n" + "connect--->success；newState：" + newState + ",service数量：" + size + "\n" + "Attempting to start service discovery:" + b;
-                log(e);
+                log("Connect--->success  " + "\n" +
+                        "Attempting to start service discovery");
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                String e = DateUtil.getCurrentDateFormat() + "\n" + "connect--->failed" + newState + "\n" + "Disconnected from GATT server.";
-                log(e);
+                log("Connect--->failed" + "\n" +
+                        " Disconnected from GATT server");
                 //                setState(ConnectionState.STATE_NONE);
             }
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            String e1 = DateUtil.getCurrentDateFormat() + "\n" + "onServicesDiscovered() called with: " +
+                    "gatt = [" + gatt + "], status = [" + status + "]";
+            log(e1);
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                String e1 = DateUtil.getCurrentDateFormat() + "\n" + "onServicesDiscovered received:  SUCCESS";
-                log(e1);
 //                setState(ConnectionState.STATE_CONNECTED);
+                log("成功");
                 initCharacteristic();
                 try {
                     Thread.sleep(200);//延迟发送，否则第一次消息会不成功
@@ -277,8 +287,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                String e = DateUtil.getCurrentDateFormat() + "\n" + "onServicesDiscovered error falure " + status;
-                log(e);
+                log("失败");
                 //                setState(ConnectionState.STATE_NONE);
             }
 
@@ -287,21 +296,24 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            String e = DateUtil.getCurrentDateFormat() + "\n" + "onCharacteristicWrite status: " + status;
+            String e = DateUtil.getCurrentDateFormat() + "\n" + "onCharacteristicWrite() called with: " +
+                    "gatt = [" + gatt + "], characteristic = [" + characteristic + "], status = [" + status + "]";
             log(e);
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
-            String e = DateUtil.getCurrentDateFormat() + "\n" + "onDescriptorWrite status: " + status;
+            String e = DateUtil.getCurrentDateFormat() + "\n" + "onDescriptorWrite() called with: " +
+                    "gatt = [" + gatt + "], descriptor = [" + descriptor + "], status = [" + status + "]";
             log(e);
         }
 
         @Override
         public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorRead(gatt, descriptor, status);
-            String e = DateUtil.getCurrentDateFormat() + "\n" + "onDescriptorRead status: " + status;
+            String e = DateUtil.getCurrentDateFormat() + "\n" + "onDescriptorRead() called with: " +
+                    "gatt = [" + gatt + "], descriptor = [" + descriptor + "], status = [" + status + "]";
             log(e);
         }
 
@@ -309,14 +321,16 @@ public class MainActivity extends AppCompatActivity {
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
-            String s = DateUtil.getCurrentDateFormat() + "\n" + "onCharacteristicRead status: " + status;
+            String s = DateUtil.getCurrentDateFormat() + "\n" + "onCharacteristicRead() called with: " +
+                    "gatt = [" + gatt + "], characteristic = [" + characteristic + "], status = [" + status + "]";
             log(s);
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            String s = DateUtil.getCurrentDateFormat() + "\n" + "onCharacteristicChanged : " + characteristic.getPermissions();
+            String s = DateUtil.getCurrentDateFormat() + "\n" + "onCharacteristicChanged() " +
+                    "called with: gatt = [" + gatt + "], characteristic = [" + characteristic + "]";
             log(s);
             readCharacteristic(characteristic);
         }
@@ -337,37 +351,45 @@ public class MainActivity extends AppCompatActivity {
         //因为不知道对方的UUID，这里遍历把所有的服务全部注册
         log("------开始收集设备信息------");
         log(DateUtil.getCurrentDateFormat());
-        for (BluetoothGattService service : services) {
-            log("service：" + String.valueOf(service.getUuid()));
+        for (int i = 0; i < services.size(); i++) {
+            BluetoothGattService service = services.get(i);
+            log("service" + i + ":" + String.valueOf(service.getUuid()));
             List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
             if (characteristics != null) {
-                for (BluetoothGattCharacteristic characteristic : characteristics) {
+                for (int y = 0; y < characteristics.size(); y++) {
+                    BluetoothGattCharacteristic characteristic = characteristics.get(y);
                     UUID uuid = characteristic.getUuid();
-                    log("characteristic:Uuid:" + String.valueOf(uuid));
-                    log("characteristic:Permissions:" + characteristic.getPermissions());
-                    log("characteristic:WriteType:" + characteristic.getWriteType());
-                    log("characteristic:Discriptors size::" + characteristic.getDescriptors());
+                    log("characteristic" + y + ":Uuid:" + String.valueOf(uuid));
+                    log("characteristic" + y + ":Permissions:" + characteristic.getPermissions());
+                    log("characteristic" + y + ":WriteType:" + characteristic.getWriteType());
+                    log("characteristic" + y + ":Discriptors size::" + characteristic.getDescriptors().size());
                     List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
                     if (descriptors.size() > 0) {
-                        for (BluetoothGattDescriptor descriptor : descriptors) {
-                            log("descriptor: Uuid:" + descriptor.getUuid());
-                            log("descriptor: Value:" + Arrays.toString(descriptor.getValue()));
-                            log("descriptor: Permissions:" + descriptor.getPermissions());
+                        for (int x = 0; x < descriptors.size(); x++) {
+                            BluetoothGattDescriptor descriptor = descriptors.get(x);
+                            log("descriptor" + x + ": Uuid:" + descriptor.getUuid());
+                            log("descriptor" + x + ": Value:" + Arrays.toString(descriptor.getValue()));
+                            log("descriptor" + x + ": Permissions:" + descriptor.getPermissions());
                         }
                     }
                 }
             }
         }
         log("------收集设备信息结束------");
-        String e = DateUtil.getCurrentDateFormat() + "\n" + "连接Service：" + String.valueOf(UUID_SERVER);
-        log(e);
-        BluetoothGattService service = mBluetoothGatt.getService(UUID_SERVER);
-        characteristicRead = service.getCharacteristic(UUID_CHARREAD);
 
-        if (characteristicRead == null)
-            throw new NullPointerException();
-        mBluetoothGatt.setCharacteristicNotification(characteristicRead, true);
-
+        //设置监听所有服务
+        for (BluetoothGattService service : services) {
+            List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+            if (characteristics != null) {
+                for (BluetoothGattCharacteristic characteristic : characteristics) {
+                    String e = DateUtil.getCurrentDateFormat() + "\n" + "监听Service："
+                            + String.valueOf(service.getUuid() + "\n" + "监听characteristic："
+                            + String.valueOf(characteristic.getUuid()));
+                    log(e);
+                    mBluetoothGatt.setCharacteristicNotification(characteristic, true);
+                }
+            }
+        }
     }
 
     public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
@@ -379,8 +401,9 @@ public class MainActivity extends AppCompatActivity {
         mBluetoothGatt.readCharacteristic(characteristic);
         byte[] bytes = characteristic.getValue();
         String str = new String(bytes);
-//        mHandler.obtainMessage(READ_MESSAGE, str).sendToTarget();
-        String msg = "## readCharacteristic, 读取到数据: " + str;
+        String msg = "## --------读取到数据-------- " + "\n"
+                + "String:" + str + "\n"
+                + "byte[]:" + Arrays.toString(bytes);
         log(msg);
     }
 
