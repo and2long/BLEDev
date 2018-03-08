@@ -1,16 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:foreground="?android:attr/selectableItemBackground">
 
+    <ImageView
+        android:id="@+id/iv_thumb"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="@dimen/default_margin"
+        android:src="@mipmap/ic_launcher_round" />
+
     <TextView
-        android:id="@+id/tv"
-        android:layout_width="match_parent"
+        android:id="@+id/tv1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:padding="10dp"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_toRightOf="@id/iv_thumb"
+        android:text="Oxy000001"
+        android:textColor="@color/primary_text"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv1"
+        android:layout_marginRight="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_toRightOf="@id/iv_thumb"
+        android:text="MAC：00000000"
+        android:textColor="@color/secondary_text"
         android:textSize="14sp" />
-</android.support.constraint.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tv_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/default_margin"
+        android:text="@string/state_disconnected"
+        android:textAllCaps="true"
+        android:textSize="16sp" />
+</RelativeLayout>

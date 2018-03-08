@@ -3,3 +3,4 @@
 
 # 预览
 <img src="pictures/preview.gif" width="320px"/>
+<img src="pictures/device-2018-03-08-150828.png" width="320px"/>

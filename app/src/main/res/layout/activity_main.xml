@@ -10,7 +10,8 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
 
     <View
         android:layout_width="match_parent"
@@ -20,13 +21,15 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="日志输出：" />
+        android:padding="10dp"
+        android:text="LOG：" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerView1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
 
 
 </LinearLayout>

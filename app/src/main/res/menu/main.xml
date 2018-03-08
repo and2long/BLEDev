@@ -4,8 +4,7 @@
 
     <item
         android:id="@+id/i_scan"
-        android:icon="@drawable/ic_bluetooth_searching"
+        android:icon="@drawable/ic_bluetooth"
         android:title="@string/scan"
         app:showAsAction="ifRoom" />
-
 </menu>
