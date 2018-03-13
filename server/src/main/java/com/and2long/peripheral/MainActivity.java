@@ -15,7 +15,6 @@ import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
-    private static final int REQUEST_ENABLE_BT = 100;
     private static final int REQUEST_CODE_LOCATION = 101;
     private BluetoothGattServer bluetoothGattServer;
     private BluetoothGattCharacteristic characteristicRead;
@@ -58,10 +56,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Initializes Bluetooth adapter.
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = mBluetoothManager.getAdapter();
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        if (mBluetoothManager != null) {
+            mBluetoothAdapter = mBluetoothManager.getAdapter();
+        }
+        if (!mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.enable();
         }
 
 
