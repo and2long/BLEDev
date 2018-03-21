@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -23,10 +24,15 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private UUID UUID_CHARREAD = UUID.fromString("8b624662-89ea-4ec9-97cc-eda0b52e96e6");
     private UUID UUID_DESCRIPTOR = UUID.fromString("8b624663-89ea-4ec9-97cc-eda0b52e96e6");
     private UUID UUID_CHARWRITE = UUID.fromString("8b624664-89ea-4ec9-97cc-eda0b52e96e6");
+    private List<String> mData = new ArrayList<>();
+    private LogAdapter adapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +62,12 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
             finish();
         }
+
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new LogAdapter(this, mData);
+        recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
         // Initializes Bluetooth adapter.
         mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -128,14 +143,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                 //在被BLE设备连接后，将触发 AdvertiseCallback 的 onStartSuccess，我们在这之后，初始化GATT的服务
-                Log.i(TAG, "BLE advertisement added successfully");
-                Log.i(TAG, "1. initGATTServer success");
+                log("BLE advertisement added successfully");
+                log("1. initGATTServer success");
                 initServices(MainActivity.this);
             }
 
             @Override
             public void onStartFailure(int errorCode) {
-                Log.i(TAG, "Failed to add BLE advertisement, errorCode: " + errorCode);
+                log("Failed to add BLE advertisement, errorCode: " + errorCode);
             }
         };
 
@@ -148,14 +163,21 @@ public class MainActivity extends AppCompatActivity {
         BluetoothGattService service = new BluetoothGattService(UUID_SERVER, BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         //add a read characteristic.
-        characteristicRead = new BluetoothGattCharacteristic(UUID_CHARREAD, BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
+        characteristicRead = new BluetoothGattCharacteristic(
+                UUID_CHARREAD,
+                BluetoothGattCharacteristic.PROPERTY_READ |
+                        BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+                BluetoothGattCharacteristic.PERMISSION_READ);
         //add a descriptor
-        BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(UUID_DESCRIPTOR, BluetoothGattCharacteristic.PERMISSION_WRITE);
+        BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(
+                UUID_DESCRIPTOR,
+                BluetoothGattCharacteristic.PERMISSION_WRITE);
         characteristicRead.addDescriptor(descriptor);
         service.addCharacteristic(characteristicRead);
 
         //add a write characteristic.
-        BluetoothGattCharacteristic characteristicWrite = new BluetoothGattCharacteristic(UUID_CHARWRITE,
+        BluetoothGattCharacteristic characteristicWrite = new BluetoothGattCharacteristic(
+                UUID_CHARWRITE,
                 BluetoothGattCharacteristic.PROPERTY_WRITE |
                         BluetoothGattCharacteristic.PROPERTY_READ |
                         BluetoothGattCharacteristic.PROPERTY_NOTIFY,
@@ -163,7 +185,8 @@ public class MainActivity extends AppCompatActivity {
         service.addCharacteristic(characteristicWrite);
 
         bluetoothGattServer.addService(service);
-        Log.i(TAG, "2. initServices ok");
+
+        log("2. initServices ok");
     }
 
     private BluetoothDevice currentDevice;
@@ -180,22 +203,34 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            Log.i(TAG, String.format("1.onConnectionStateChange：device name = %s, address = %s", device.getName(), device.getAddress()));
-            Log.i(TAG, String.format("1.onConnectionStateChange：status = %s, newState =%s ", status, newState));
+            log(String.format("1.onConnectionStateChange：device name = %s, address = %s", device.getName(), device.getAddress()));
+            log(String.format("1.onConnectionStateChange：status = %s, newState =%s ", status, newState));
             super.onConnectionStateChange(device, status, newState);
-            currentDevice = device;
+            switch (newState) {
+                case BluetoothGattServer.STATE_CONNECTED:
+                    //有设备链接上
+                    log("有设备连接上 ");
+                    currentDevice = device;
+                    break;
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    log("与设备断开连接");
+                    currentDevice = null;
+                    break;
+                default:
+                    break;
+            }
         }
 
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
             super.onServiceAdded(status, service);
-            Log.i(TAG, String.format("onServiceAdded：status = %s", status));
+            log(String.format("onServiceAdded：status = %s", status));
         }
 
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
-            Log.i(TAG, String.format("onCharacteristicReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
-            Log.i(TAG, String.format("onCharacteristicReadRequest：requestId = %s, offset = %s", requestId, offset));
+            log(String.format("onCharacteristicReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
+            log(String.format("onCharacteristicReadRequest：requestId = %s, offset = %s", requestId, offset));
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.getValue());
             //            super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
         }
@@ -212,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] requestBytes) {
-            Log.i(TAG, String.format("3.onCharacteristicWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
+            log(String.format("3.onCharacteristicWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, requestBytes);
             //4.处理响应内容
             onResponseToClient(requestBytes, device, requestId, characteristic);
@@ -230,8 +265,8 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-            Log.i(TAG, String.format("2.onDescriptorWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
-            //            Log.i(TAG, String.format("2.onDescriptorWriteRequest：requestId = %s, preparedWrite = %s, responseNeeded = %s, offset = %s, value = %s,", requestId, preparedWrite, responseNeeded, offset, OutputStringUtil.toHexString(value)));
+            log(String.format("2.onDescriptorWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
+            //            log(String.format("2.onDescriptorWriteRequest：requestId = %s, preparedWrite = %s, responseNeeded = %s, offset = %s, value = %s,", requestId, preparedWrite, responseNeeded, offset, OutputStringUtil.toHexString(value)));
 
             // now tell the connected device that this was all successfull
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
@@ -246,8 +281,8 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
-            Log.i(TAG, String.format("onDescriptorReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
-            Log.i(TAG, String.format("onDescriptorReadRequest：requestId = %s", requestId));
+            log(String.format("onDescriptorReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
+            log(String.format("onDescriptorReadRequest：requestId = %s", requestId));
             //            super.onDescriptorReadRequest(device, requestId, offset, descriptor);
             bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null);
         }
@@ -255,20 +290,20 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onNotificationSent(BluetoothDevice device, int status) {
             super.onNotificationSent(device, status);
-            Log.i(TAG, String.format("5.onNotificationSent：device name = %s, address = %s", device.getName(), device.getAddress()));
-            Log.i(TAG, String.format("5.onNotificationSent：status = %s", status));
+            log(String.format("5.onNotificationSent：device name = %s, address = %s", device.getName(), device.getAddress()));
+            log(String.format("5.onNotificationSent：status = %s", status));
         }
 
         @Override
         public void onMtuChanged(BluetoothDevice device, int mtu) {
             super.onMtuChanged(device, mtu);
-            Log.i(TAG, String.format("onMtuChanged：mtu = %s", mtu));
+            log(String.format("onMtuChanged：mtu = %s", mtu));
         }
 
         @Override
         public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
             super.onExecuteWrite(device, requestId, execute);
-            Log.i(TAG, String.format("onExecuteWrite：requestId = %s", requestId));
+            log(String.format("onExecuteWrite：requestId = %s", requestId));
         }
     };
 
@@ -281,11 +316,11 @@ public class MainActivity extends AppCompatActivity {
      * @param characteristic
      */
     private void onResponseToClient(byte[] reqeustBytes, BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic) {
-        Log.i(TAG, String.format("4.onResponseToClient：device name = %s, address = %s", device.getName(), device.getAddress()));
-        Log.i(TAG, String.format("4.onResponseToClient：requestId = %s", requestId));
+        log(String.format("4.onResponseToClient：device name = %s, address = %s", device.getName(), device.getAddress()));
+        log(String.format("4.onResponseToClient：requestId = %s", requestId));
         //        String msg = OutputStringUtil.transferForPrint(reqeustBytes);
         String msg = new String(reqeustBytes);
-        Log.i(TAG, "4.收到:" + msg);
+        log("4.收到:" + msg);
         currentDevice = device;
     }
 
@@ -296,10 +331,24 @@ public class MainActivity extends AppCompatActivity {
      */
     private void sendMessage(String message) {
         characteristicRead.setValue(message.getBytes());
-        if (currentDevice != null)
+        if (currentDevice != null) {
             bluetoothGattServer.notifyCharacteristicChanged(currentDevice, characteristicRead, false);
+            log("4.发送:" + message);
+        } else {
+            log("没有可连接的设备");
+        }
+    }
 
-        Log.i(TAG, "4.发送:" + message);
+    /**
+     * 日志来录
+     *
+     * @param data
+     */
+    private void log(String data) {
+        Log.i(TAG, "log: " + data);
+        mData.add(data);
+        adapter.notifyDataSetChanged();
+        recyclerView.scrollToPosition(mData.size() - 1);
     }
 
 
