@@ -185,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
         service.addCharacteristic(characteristicWrite);
 
         bluetoothGattServer.addService(service);
-
         log("2. initServices ok");
     }
 
