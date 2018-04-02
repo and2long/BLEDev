@@ -164,16 +164,22 @@ public class MainActivity extends AppCompatActivity {
 
                 String name = device.getName();
                 log(DateUtil.getCurrentDateFormat() + "\n" + name + " : " + device.getAddress());
-                if (mData.size() > 0) {
+                //判断集合是否为空
+                if (mData.isEmpty()) {
+                    addToDeviceList(device, name);
+                } else {
+                    //判断是否已存在
+                    boolean b = false;
                     for (DevicesBean bean : mData) {
                         if (bean.getDevice().equals(device)) {
+                            b = true;
                             break;
-                        } else {
-                            addToDeviceList(device, name);
                         }
                     }
-                } else {
-                    addToDeviceList(device, name);
+                    //如果不存在，则添加入集合
+                    if (!b) {
+                        addToDeviceList(device, name);
+                    }
                 }
 
                 adapter.notifyDataSetChanged();
