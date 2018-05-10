@@ -1,6 +1,0 @@
-<resources>
-    <string name="app_name">Peripheral</string>
-    <string name="ble_not_supported">BLE not supported</string>
-    <string name="ok">OK</string>
-    <string name="alert_permission_location">Apply for location permissions</string>
-</resources>
