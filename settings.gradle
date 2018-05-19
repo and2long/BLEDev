@@ -1,1 +1,1 @@
-include ':BLE_Client', ':BLE_Server', ':Chat', ':A2DP'
+include ':BLE_Client', ':BLE_Server', ':Chat', ':A2DP', ':record'
