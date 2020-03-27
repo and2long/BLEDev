@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         btn_start.setOnClickListener { startRecording() }
         btn_stop.setOnClickListener { stopRecording() }
-        btn_play.setOnClickListener { startActivity(Intent(this, AudioPlayActivity::class.java))  }
+        btn_play.setOnClickListener { startActivity(Intent(this, AudioPlayActivity::class.java)) }
     }
 
     private fun stopRecording() {
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startRecording() {
-        mFileName = Environment.getExternalStorageDirectory().getAbsolutePath()
+        mFileName = Environment.getExternalStorageDirectory().absolutePath
         mFileName += "/record.3gp"
         if (mRecorder == null) {
             mRecorder = MediaRecorder()
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             override fun onReceive(context: Context, intent: Intent) {
                 val state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1)
 
-                if (AudioManager.SCO_AUDIO_STATE_CONNECTED === state) {
+                if (AudioManager.SCO_AUDIO_STATE_CONNECTED == state) {
                     Log.i(TAG, "AudioManager.SCO_AUDIO_STATE_CONNECTED")
                     mAudioManager!!.isBluetoothScoOn = true  //打开SCO
                     Log.i(TAG, "Routing:" + mAudioManager!!.isBluetoothScoOn)
